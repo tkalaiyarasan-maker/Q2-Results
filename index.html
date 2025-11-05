@@ -800,6 +800,478 @@
 
         });
     </script>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L&T H1 FY26 Risk Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutral (Stone, Blue Accent) -->
+    <!-- Application Structure Plan: A dashboard-style SPA with a persistent left-hand sidebar navigation. This structure is chosen over a linear report to match an analyst's workflow, allowing non-linear exploration and synthesis. The report's 10 points are grouped into 4 thematic dashboards (Profitability, Operations, Financials, Strategy) plus an Executive Summary. This grouping helps users connect related risks (e.g., seeing Margins and Costs together). JS controls hiding/showing content panes, making it a true single-page app. -->
+    <!-- Visualization & Content Choices: [Margin Pressure (Pt 1) -> Goal: Compare -> Viz: Grouped Bar Chart -> Interaction: Tooltip -> Justification: Clear visual of decline across segments -> Library: Chart.js], [Cost Growth (Pt 6) -> Goal: Compare -> Viz: KPI Stat Cards -> Interaction: None -> Justification: Direct comparison of cost vs. revenue growth], [Order Inflow (Pt 3) -> Goal: Inform Proportion -> Viz: Doughnut Chart -> Interaction: Tooltip -> Justification: Shows international vs. domestic skew clearly -> Library: Chart.js], [Working Capital (Pt 4) -> Goal: Compare Scale -> Viz: Horizontal Bar Chart -> Interaction: Tooltip -> Justification: Visually represents the magnitude of locked-up capital in assets vs. payables -> Library: Chart.js], [Other Data (Infra, Leverage, Non-Core) -> Goal: Inform -> Viz: KPI Stat Cards -> Interaction: None -> Justification: Quick, high-impact display of key numbers.] -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-item {
+            transition: all 0.2s ease-in-out;
+        }
+        .nav-item.active, .nav-item:hover {
+            background-color: #eff6ff; 
+            color: #2563eb; 
+            border-right: 4px solid #2563eb;
+        }
+        .stat-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+        }
+        .kpi-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            line-height: 2.5rem;
+        }
+        .kpi-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-700">
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <nav id="sidebar" class="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-stone-200 flex-shrink-0">
+            <div class="p-4">
+                <h2 class="text-xl font-bold text-stone-800">L&T H1 FY26</h2>
+                <p class="text-sm text-stone-500">Interactive Risk Analysis</p>
+            </div>
+            <ul class="flex flex-row md:flex-col p-2 md:p-4 space-x-2 md:space-x-0 md:space-y-2 overflow-x-auto">
+                <li><a href="#" class="nav-item active flex items-center p-3 rounded-lg font-medium text-sm" data-page="page-summary">
+                    <span class="mr-3">📋</span> Executive Summary
+                </a></li>
+                <li><a href="#" class="nav-item flex items-center p-3 rounded-lg font-medium text-sm" data-page="page-profitability">
+                    <span class="mr-3">📉</span> Profitability & Margins
+                </a></li>
+                <li><a href="#" class="nav-item flex items-center p-3 rounded-lg font-medium text-sm" data-page="page-operations">
+                    <span class="mr-3">🏗️</span> Operations & Execution
+                </a></li>
+                <li><a href="#" class="nav-item flex items-center p-3 rounded-lg font-medium text-sm" data-page="page-financials">
+                    <span class="mr-3">💸</span> Financial Health
+                </a></li>
+                <li><a href="#" class="nav-item flex items-center p-3 rounded-lg font-medium text-sm" data-page="page-strategic">
+                    <span class="mr-3">🧭</span> Strategic & Non-Core
+                </a></li>
+            </ul>
+        </nav>
+
+        <main id="content-area" class="flex-1 p-4 md:p-8 overflow-y-auto">
+            
+            <div id="page-summary" class="page-content space-y-6">
+                <h1 class="text-3xl font-bold text-stone-800">Executive Summary & Key Risk Areas</h1>
+                <div class="bg-white p-6 rounded-lg shadow border border-stone-200">
+                    <h2 class="text-2xl font-semibold text-stone-800 mb-4">🧭 Conclusion: A Paradox of Growth and Strain</h2>
+                    <p class="mb-4 text-stone-600">L&T’s H1 FY26 report undeniably demonstrates powerful topline and order momentum, confirming its market leadership in the EPC domain. However, a deeper look reveals that the <strong>quality of this growth is the paramount issue.</strong></p>
+                    <p class="mb-4 text-stone-600">The key performance equation has a serious inflection point: <strong>Revenue growth > Profit growth > Margin growth (slowing).</strong></p>
+                    <p class="mb-4 text-stone-600">Execution delays in the stable domestic infrastructure market, combined with escalating cost pressure in core P&M and IT divisions, are starting to manifest as execution fatigue. Furthermore, the increasing reliance on the volatile international GCC market imports significant geopolitical and financial risk.</p>
+                    <p class="font-medium text-stone-800">If L&T fails to execute the planned asset divestments quickly and improve working capital turnover, the current strong order book could eventually translate into significant <strong>cash strain</strong> and <strong>margin compression</strong> in the crucial FY26–27 period.</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow border border-stone-200">
+                    <h2 class="text-2xl font-semibold text-stone-800 mb-4">🔍 Comprehensive Summary of Problem Areas</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-stone-200">
+                            <thead class="bg-stone-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Area</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Type</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Impact</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Detailed Comment on Risk Profile</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-stone-200">
+                                <tr class="bg-red-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-800">Energy Projects Margin Dip (7.4%)</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-600">Operational</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-800">High</td>
+                                    <td class="px-6 py-4 text-sm text-stone-600">Acute cost overruns or aggressive pricing; most severe profitability indicator.</td>
+                                </tr>
+                                <tr class="bg-red-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-800">High Working Capital & Receivables</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-600">Financial</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-800">High</td>
+                                    <td class="px-6 py-4 text-sm text-stone-600">Protracted cash conversion cycle requiring tactical reliance on delaying vendor payments.</td>
+                                </tr>
+                                <tr class="bg-red-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-800">Infra Segment Revenue Flatness</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-600">Execution</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-800">High</td>
+                                    <td class="px-6 py-4 text-sm text-stone-600">Indicates systemic execution bottlenecks (clearances, land) & government-linked delays.</td>
+                                </tr>
+                                <tr class="bg-red-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-800">Dependence on GCC / Hydrocarbon</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-600">Strategic</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-800">High</td>
+                                    <td class="px-6 py-4 text-sm text-stone-600">Order concentration risk exposed to oil price volatility & regional project slowdowns.</td>
+                                </tr>
+                                <tr class="bg-yellow-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-800">Nabha Power & Metro Drag</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-600">Legal/Structural</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-800">Medium</td>
+                                    <td class="px-6 py-4 text-sm text-stone-600">Ongoing liability & slow progress on the asset-light strategy agenda.</td>
+                                </tr>
+                                <tr class="bg-yellow-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-800">Rising Employee & Admin Costs</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-600">Operational</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-800">Medium</td>
+                                    <td class="px-6 py-4 text-sm text-stone-600">Operating leverage is eroding as cost growth outpaces revenue growth.</td>
+                                </tr>
+                                <tr class="bg-yellow-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-800">IT & Tech Services Margin Pressure</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-600">Business Mix</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-800">Medium</td>
+                                    <td class="px-6 py-4 text-sm text-stone-600">Structural margin compression from retention costs & high upfront investment.</td>
+                                </tr>
+                                <tr class="bg-yellow-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-800">Realty Division Volatility</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-600">Structural</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-800">Medium</td>
+                                    <td class="px-6 py-4 text-sm text-stone-600">Core growth is weak, with profitability boosted by non-recurring, one-off asset sales.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-profitability" class="page-content hidden space-y-6">
+                <h1 class="text-3xl font-bold text-stone-800">Dashboard: Profitability & Margin Analysis</h1>
+                <p class="text-lg text-stone-600">This section analyzes the core profitability challenges, from systemic cost inflation compressing consolidated margins to specific pressures in the high-growth Energy and IT segments. The data shows a clear trend of eroding operating leverage.</p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="stat-card p-4">
+                        <h3 class="text-lg font-semibold text-stone-800 mb-3">Key Segment Margin Decline (H1 FY25 vs H1 FY26)</h3>
+                        <p class="text-sm text-stone-600 mb-4">Margins are compressing across the board. The 150 bps drop in Energy Projects is the most alarming, suggesting aggressive bidding or execution cost overruns on new, large-scale orders.</p>
+                        <div class="chart-container">
+                            <canvas id="marginChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="stat-card p-4">
+                        <h3 class="text-lg font-semibold text-stone-800 mb-3">Operating Leverage Under Pressure</h3>
+                        <p class="text-sm text-stone-600 mb-4">Profitability is being squeezed by costs growing faster than revenue. This reversal of operating leverage is driven by wage inflation in IT units and R&D spending for new businesses.</p>
+                        <div class="grid grid-cols-2 gap-4 mt-6">
+                            <div class="p-4 bg-green-50 rounded-lg border border-green-200 text-center">
+                                <div class="kpi-value text-green-700">+13%</div>
+                                <div class="kpi-label text-green-600">Consolidated Revenue Growth</div>
+                            </div>
+                            <div class="p-4 bg-red-50 rounded-lg border border-red-200 text-center">
+                                <div class="kpi-value text-red-700">+14%</div>
+                                <div class="kpi-label text-red-600">Employee Benefits Expense Growth</div>
+                            </div>
+                        </div>
+                        <div class="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                            <h4 class="font-semibold text-blue-800">Subsidiary-Level Pressures</h4>
+                            <ul class="list-disc list-inside text-sm text-blue-700 mt-2 space-y-1">
+                                <li><strong>L&T Finance (LTFH):</strong> NIM fell (11.0% → 10.2%) due to competition.</li>
+                                <li><strong>LTIM & LTTS:</strong> Both IT subsidiaries face margin contraction from wage hikes and high retention costs.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                 <div class="stat-card p-6">
+                    <h3 class="text-lg font-semibold text-stone-800 mb-3">Analysis & Interpretation</h3>
+                    <p class="text-stone-600">Margins are compressing despite strong revenue growth, signifying that L&T is currently winning volume, not necessarily maximizing profitability. The core Projects & Manufacturing (P&M) segment profitability is under acute stress. This is driven by both systemic cost creep in materials and IT-led wage inflation, indicating that productivity per employee might be flat or declining.</p>
+                </div>
+            </div>
+
+            <div id="page-operations" class="page-content hidden space-y-6">
+                <h1 class="text-3xl font-bold text-stone-800">Dashboard: Operations & Execution</h1>
+                <p class="text-lg text-stone-600">Explore the operational performance, focusing on the critical disconnect between a record-high order book and the flat-lining execution in core domestic segments. The quality and concentration of new orders present a significant strategic risk.</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="stat-card p-4">
+                        <h3 class="text-lg font-semibold text-stone-800 mb-3">Core Infrastructure Segment Weakness</h3>
+                        <p class="text-sm text-stone-600 mb-4">Despite a massive ₹3.9 lakh crore order book (60%+ of total), the core infrastructure segment's revenue declined. This hints at structural execution bottlenecks, weather delays, and dependency on government timelines.</p>
+                        <div class="text-center p-8 bg-red-50 rounded-lg border border-red-200 mt-10">
+                            <div class="kpi-value text-red-700">-1%</div>
+                            <div class="kpi-label text-red-600">Infrastructure Segment Revenue (YoY)</div>
+                        </div>
+                         <div class="mt-6">
+                            <h4 class="font-semibold text-stone-800">Detailed Impact:</h4>
+                            <ul class="list-disc list-inside text-sm text-stone-600 mt-2 space-y-1">
+                                <li><strong>Opportunity Cost:</strong> A delay in monetizing the most stable, domestically-secured part of the pipeline.</li>
+                                <li><strong>Government Dependency:</strong> Risk from delays in clearances, land acquisition, and payments.</li>
+                                <li><strong>Execution Risk:</strong> Potential hurdles in new, complex high-tech projects.</li>
+                            </ul>
+                        </div>
+                    </div>
+                     <div class="stat-card p-4">
+                        <h3 class="text-lg font-semibold text-stone-800 mb-3">Quality of Order Inflow (H1 FY26)</h3>
+                        <p class="text-sm text-stone-600 mb-4">Consolidated order inflow grew 39%, but this growth is highly concentrated. 59% of new orders are international, dominated by Middle East Hydrocarbon projects. Domestic infra inflow grew only ~5%.</p>
+                        <div class="chart-container h-64 max-h-72">
+                            <canvas id="orderInflowChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card p-6 bg-yellow-50 border-yellow-200">
+                    <h3 class="text-lg font-semibold text-yellow-800 mb-3">🧨 Geopolitical & Market Concentration Risk</h3>
+                    <p class="text-yellow-700 mb-2">The reliance on the Gulf Cooperation Council (GCC) is increasingly risky. This exposure is directly linked to GCC capital expenditure, which is sensitive to oil prices (projected to drop) and regional stability.</p>
+                    <p class="text-yellow-700">Recent reports already indicate a sharp slowdown in the GCC project market in Q3 2025, validating this vulnerability. L&T is essentially importing higher risk to compensate for lagging domestic growth.</p>
+                </div>
+            </div>
+
+            <div id="page-financials" class="page-content hidden space-y-6">
+                <h1 class="text-3xl font-bold text-stone-800">Dashboard: Financial Health & Working Capital</h1>
+                <p class="text-lg text-stone-600">This dashboard examines L&T's financial foundation, highlighting the significant and persistent strain on working capital and the high-leverage state of the balance sheet. Cash conversion remains the central financial challenge.</p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="stat-card p-4">
+                        <h3 class="text-lg font-semibold text-stone-800 mb-3">Working Capital Strain (in ₹ Cr)</h3>
+                        <p class="text-sm text-stone-600 mb-4">The absolute level of receivables and other assets (unbilled revenue, advances) remains stubbornly high, locking up vast amounts of capital. The high trade payables show L&T is delaying vendor payments to offset this strain.</p>
+                        <div class="chart-container">
+                            <canvas id="workingCapitalChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div class="stat-card p-4">
+                            <h3 class="text-lg font-semibold text-stone-800 mb-3">Capital Efficiency & Leverage</h3>
+                            <p class="text-sm text-stone-600 mb-4">The company remains highly leveraged. While returns are improving, they must be sustained to justify the high capital allocation in the EPC business.</p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="text-center p-4">
+                                    <div class="kpi-value text-stone-800">1.09x</div>
+                                    <div class="kpi-label">Debt-Equity Ratio</div>
+                                </div>
+                                <div class="text-center p-4">
+                                    <div class="kpi-value text-stone-800">17.2%</div>
+                                    <div class="kpi-label">Return on Equity (ROE)</div>
+                                </div>
+                                <div class="text-center p-4">
+                                    <div class="kpi-value text-stone-800">14.5%</div>
+                                    <div class="kpi-label">Return on Capital (ROCE)</div>
+                                </div>
+                                 <div class="text-center p-4">
+                                    <div class="kpi-value text-stone-800">6.0</div>
+                                    <div class="kpi-label">DSCR (H1)</div>
+                                </div>
+                            </div>
+                        </div>
+                         <div class="stat-card p-6 bg-red-50 border-red-200">
+                            <h3 class="text-lg font-semibold text-red-800 mb-3">⚠️ Concern & Cash Conversion</h3>
+                            <p class="text-red-700">The high Debt-to-EBITDA ratio (~5.03x) and high interest costs constrain financial flexibility. The cash conversion cycle is still inherently long. Without a radical improvement in working capital turnover, debt levels are poised to rise again as new large orders move into the capital-intensive execution phase.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-strategic" class="page-content hidden space-y-6">
+                <h1 class="text-3xl font-bold text-stone-800">Dashboard: Strategic & External Risks</h1>
+                <p class="text-lg text-stone-600">Analyze long-term strategic risks, from underperforming non-core assets and divestment delays to external geopolitical factors and the high cost of new technology ventures.</p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="stat-card p-4">
+                        <h3 class="text-lg font-semibold text-stone-800 mb-3">Non-Core & Development Drag</h3>
+                        <p class="text-sm text-stone-600 mb-4">These non-core businesses continue to consume capital and drag on performance. Realty's profitability is inflated by one-off asset sales, masking a 14% revenue decline.</p>
+                        <div class="grid grid-cols-2 gap-4 mt-6">
+                            <div class="p-4 bg-red-50 rounded-lg border border-red-200 text-center">
+                                <div class="kpi-value text-red-700">-14%</div>
+                                <div class="kpi-label text-red-600">Realty Segment Revenue Growth</div>
+                            </div>
+                            <div class="p-4 bg-red-50 rounded-lg border border-red-200 text-center">
+                                <div class="kpi-value text-red-700">↓30%</div>
+                                <div class="kpi-label text-red-600">Development EBIT (₹125Cr → ₹87Cr)</div>
+                            </div>
+                        </div>
+                         <div class="mt-6">
+                            <h4 class="font-semibold text-stone-800">Divestment & Legal Friction:</h4>
+                            <ul class="list-disc list-inside text-sm text-stone-600 mt-2 space-y-1">
+                                <li><strong>Unsustainable Profit:</strong> Realty margin (31.3%) is from one-time property sales, not recurring earnings.</li>
+                                <li><strong>Divestment Delays:</strong> The *Lakshya 2026* asset-light plan is hindered by slow progress. The Hyderabad Metro (L&TMRHL) divestment is still pending final approvals, targeted for end of FY26.</li>
+                                <li><strong>Nabha Power:</strong> Continues to be a perennial legal and financial drag, with new provisions hitting EBIT.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="stat-card p-4">
+                            <h3 class="text-lg font-semibold text-stone-800 mb-3">🧱 Strategic & Structural Risks</h3>
+                            <ul class="list-disc list-inside text-stone-600 mt-2 space-y-2 text-sm">
+                                <li><strong>New Sector Capital Burn:</strong> Expansion into Semiconductors, Green Hydrogen, and Digital is crucial for the future but is capital-intensive and dilutive to near-term margins. The payback period is uncertain.</li>
+                                <li><strong>Divestment Delays:</strong> Slow progress on Nabha Power and Metro sales shows significant bureaucratic and legal friction, delaying the balance sheet cleanup.</li>
+                            </ul>
+                        </div>
+                        <div class="stat-card p-4 bg-blue-50 border-blue-200">
+                            <h3 class="text-lg font-semibold text-blue-800 mb-3">🌐 Exposure to External Factors</h3>
+                             <ul class="list-disc list-inside text-blue-700 mt-2 space-y-2 text-sm">
+                                <li><strong>International Concentration:</strong> 59% of new orders and 49% of the order book are international, heavily skewed to GCC countries.</li>
+                                <li><strong>Interlinked Risks:</strong> High exposure to oil prices, FX volatility, and political stability. Recent GCC project slowdowns validate this risk.</li>
+                                <li><strong>Domestic Risks:</strong> The upcoming Indian elections (2026) may temporarily slow government capex and project awards.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navItems = document.querySelectorAll('.nav-item');
+            const pages = document.querySelectorAll('.page-content');
+
+            document.getElementById('sidebar').addEventListener('click', (event) => {
+                const navItem = event.target.closest('.nav-item');
+                if (!navItem) return;
+
+                event.preventDefault();
+                const targetPageId = navItem.dataset.page;
+
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                });
+                navItem.classList.add('active');
+
+                pages.forEach(page => {
+                    if (page.id === targetPageId) {
+                        page.classList.remove('hidden');
+                    } else {
+                        page.classList.add('hidden');
+                    }
+                });
+            });
+
+            function createMarginChart() {
+                const ctx = document.getElementById('marginChart')?.getContext('2d');
+                if (!ctx) return;
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['EBITDA', 'Energy Projects', 'IT & Tech Services'],
+                        datasets: [
+                            {
+                                label: 'FY25 H1',
+                                data: [10.3, 8.9, 21.0],
+                                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'FY26 H1',
+                                data: [10.0, 7.4, 20.2],
+                                backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                                borderColor: 'rgba(239, 68, 68, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: 'Margin % (H1 FY25 vs H1 FY26)' },
+                            tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${context.parsed.y}%` } }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { callback: (value) => `${value}%` } }
+                        }
+                    }
+                });
+            }
+
+            function createOrderInflowChart() {
+                const ctx = document.getElementById('orderInflowChart')?.getContext('2d');
+                if (!ctx) return;
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['International (59%)', 'Domestic (41%)'],
+                        datasets: [{
+                            data: [59, 41],
+                            backgroundColor: ['rgba(239, 68, 68, 0.7)', 'rgba(59, 130, 246, 0.7)'],
+                            borderColor: ['rgba(239, 68, 68, 1)', 'rgba(59, 130, 246, 1)'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: 'H1 FY26 Order Inflow Mix' },
+                            tooltip: { callbacks: { label: (context) => `${context.label}: ${context.parsed}%` } }
+                        }
+                    }
+                });
+            }
+
+            function createWorkingCapitalChart() {
+                const ctx = document.getElementById('workingCapitalChart')?.getContext('2d');
+                if (!ctx) return;
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Receivables', 'Other Current Assets', 'Trade Payables'],
+                        datasets: [{
+                            label: 'Amount (in ₹ Cr)',
+                            data: [53655, 78269, 51291],
+                            backgroundColor: [
+                                'rgba(239, 68, 68, 0.6)',
+                                'rgba(239, 68, 68, 0.4)',
+                                'rgba(59, 130, 246, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(239, 68, 68, 1)',
+                                'rgba(239, 68, 68, 1)',
+                                'rgba(59, 130, 246, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: 'Key Working Capital Components (₹ Cr)' },
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    callback: (value) => `${value / 1000}k`
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            createMarginChart();
+            createOrderInflowChart();
+            createWorkingCapitalChart();
+        });
+    </script>
+
 </body>
+    
 </html>
+
 
