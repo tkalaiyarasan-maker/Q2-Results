@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L&T H1 FY26 Enhanced Interactive Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutral (BG: neutral-50, Text: slate-800, Cards: white, Accent: blue-700, Positive: emerald-600, Negative: red-600) -->
+    <!-- Application Structure Plan: A single-page dashboard with a sticky top navigation bar (Overview, Segment Deep Dive, Financial Health, Strategy & Outlook). This tabbed, non-linear structure is chosen over a linear report mirror because it empowers users to directly access their specific area of interest (e.g., high-level KPIs, segment performance, or balance sheet health). This task-oriented design makes the dense financial data far more digestible and explorable. Clicking a nav item dynamically shows the relevant content section and hides the others, focusing the user's attention. -->
+    <!-- Visualization & Content Choices:
+        - Overview: Goal(Inform/Compare) -> KPI Cards (HTML/Tailwind), H1 Growth Bar Chart (Chart.js), Order Book Doughnut (Chart.js), and NEW Geographic Revenue Doughnut (Chart.js). Interaction(Tooltips). Justification(Provides an immediate, scannable summary, now clearly separating revenue and order sources geographically).
+        - Segment Deep Dive: Goal(Compare/Organize/Change) -> Segment Revenue/Margin Bar Charts (Chart.js), a dynamic details card (HTML/JS), and NEW Quarterly Segment Trend Line Chart (Chart.js). Interaction(Dropdown change event updates text block and the Line Chart). Justification(Allows comparison, drill-down, and now critical time-series analysis (Q1 vs Q2) for a focused segment).
+        - Financial Health: Goal(Inform/Compare/Organize) -> Cash Flow Bar Chart (Chart.js), Key Ratios Bar Chart (Chart.js), Balance Sheet KPI Cards (HTML/Tailwind), and NEW Capital Employed Stacked Bar (Chart.js). Interaction(Tooltips). Justification(Visually groups all stability metrics, including the new chart to illustrate asset allocation).
+        - Strategy & Outlook: Goal(Inform) -> Thematic Cards (HTML/Tailwind Grid for Strategy, Macro, Guidance) & 2-column list (Strengths/Risks). Interaction(None). Justification(A clean, card-based layout for organized qualitative information).
+        - All chart containers are styled with max-width and responsive height to ensure layout integrity.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .nav-item {
+            @apply px-3 py-2 text-sm font-medium text-slate-600 rounded-md transition-all duration-150 ease-in-out;
+        }
+        .nav-item:hover {
+            @apply bg-neutral-100 text-slate-900;
+        }
+        .nav-item-active {
+            @apply bg-blue-100 text-blue-700 font-semibold shadow-sm;
+        }
+        .nav-item-active:hover {
+            @apply bg-blue-100 text-blue-700;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section-active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 650px; /* Increased max-width slightly for more data */
+            height: 300px;
+            max-height: 350px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 400px;
+            }
+        }
+        .kpi-card {
+            @apply bg-white p-5 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl;
+        }
+        .kpi-title {
+            @apply text-sm font-medium text-slate-500 mb-1;
+        }
+        .kpi-value {
+            @apply text-3xl font-bold text-slate-800;
+        }
+        .kpi-delta-pos {
+            @apply text-emerald-600 text-sm font-semibold ml-2;
+        }
+        .kpi-delta-neg {
+            @apply text-red-600 text-sm font-semibold ml-2;
+        }
+        .kpi-delta-neutral {
+            @apply text-slate-500 text-sm font-semibold ml-2;
+        }
+    </style>
+</head>
+<body class="bg-neutral-50 text-slate-800">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-3">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">L&T H1 FY26 Interactive Analysis</h1>
+                <div class="hidden sm:flex sm:space-x-1 md:space-x-2">
+                    <button class="nav-item nav-item-active" data-content="content-overview">Overview</button>
+                    <button class="nav-item" data-content="content-segments">Segment Deep Dive</button>
+                    <button class="nav-item" data-content="content-health">Financial Health</button>
+                    <button class="nav-item" data-content="content-strategy">Strategy & Outlook</button>
+                </div>
+            </div>
+            <div class="sm:hidden flex overflow-x-auto space-x-2 pb-2 -mb-2">
+                <button class="nav-item nav-item-active flex-shrink-0" data-content="content-overview">Overview</button>
+                <button class="nav-item flex-shrink-0" data-content="content-segments">Segment Deep Dive</button>
+                <button class="nav-item flex-shrink-0" data-content="content-health">Financial Health</button>
+                <button class="nav-item flex-shrink-0" data-content="content-strategy">Strategy & Outlook</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+        <section id="content-overview" class="content-section content-section-active space-y-8">
+            <div class="p-6 bg-white rounded-lg shadow">
+                <h2 class="text-2xl font-bold text-slate-800 mb-3">H1 FY26 Performance Overview</h2>
+                <p class="text-slate-600">
+                    Welcome to the interactive analysis of L&T's half-year performance. This overview section summarizes the most critical headline numbers, focusing on growth in orders, revenue, and profit, as well as the significant shift towards international business. The visualizations break down growth trends and the geographic spread of both the order book and the executed revenue.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6">
+                <div class="kpi-card">
+                    <div class="kpi-title">Order Inflow (H1 FY26)</div>
+                    <div class="kpi-value">₹2,10,237 Cr</div>
+                    <div class="kpi-delta-pos">↑ 39% YoY</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Revenue (H1 FY26)</div>
+                    <div class="kpi-value">₹1,31,662 Cr</div>
+                    <div class="kpi-delta-pos">↑ 13% YoY</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Profit After Tax (H1 FY26)</div>
+                    <div class="kpi-value">₹7,543 Cr</div>
+                    <div class="kpi-delta-pos">↑ 22% YoY</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">International Orders</div>
+                    <div class="kpi-value">59% of Inflow</div>
+                    <div class="kpi-delta-pos">↑ from 50%</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-center mb-4">Total Order Book: ₹6.67L Cr</h3>
+                    <p class="text-sm text-slate-500 text-center mb-4">International orders, primarily from the Middle East, account for a large portion of the future revenue pipeline.</p>
+                    <div class="chart-container" style="height: 250px; max-height: 280px;">
+                        <canvas id="orderBookChart"></canvas>
+                    </div>
+                </div>
+                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-center mb-4">H1 FY26 Revenue Mix</h3>
+                    <p class="text-sm text-slate-500 text-center mb-4">While future orders are international heavy, executed revenue remains predominantly domestic.</p>
+                    <div class="chart-container" style="height: 250px; max-height: 280px;">
+                        <canvas id="geographicRevenueChart"></canvas>
+                    </div>
+                </div>
+                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-center mb-4">H1 Performance Growth vs. PY</h3>
+                    <p class="text-sm text-slate-500 text-center mb-4">PAT growth significantly outpaced revenue, indicating strong margins. All values in %.</p>
+                    <div class="chart-container" style="height: 250px; max-height: 280px;">
+                        <canvas id="h1PerformanceGrowthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="content-segments" class="content-section space-y-8">
+            <div class="p-6 bg-white rounded-lg shadow">
+                <h2 class="text-2xl font-bold text-slate-800 mb-3">Segment-Wise Deep Dive (Q2 FY26)</h2>
+                <p class="text-slate-600">
+                    This deep dive allows you to explore the diverse business segments. The charts provide a high-level comparison of revenue and profitability across the entire group. Use the dropdown menu to select a specific segment and view its detailed performance data, management commentary, and its quarter-on-quarter trend.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow">
+                    <label for="segment-selector" class="block text-sm font-medium text-slate-700 mb-2">Select a Segment to Analyze</label>
+                    <select id="segment-selector" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <option value="Infrastructure Projects" selected>Infrastructure Projects</option>
+                        <option value="Energy Projects">Energy Projects</option>
+                        <option value="Hi-Tech Manufacturing">Hi-Tech Manufacturing</option>
+                        <option value="IT & Technology Services">IT & Technology Services</option>
+                        <option value="Financial Services">Financial Services</option>
+                        <option value="Development Projects">Development Projects</option>
+                        <option value="Others">Others</option>
+                    </select>
+                    <div id="segment-details-card" class="mt-6 space-y-4">
+                        <!-- Dynamic content will be injected here -->
+                    </div>
+                </div>
+                <div class="lg:col-span-2 grid grid-cols-1 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold text-center mb-4">Quarterly Trend: Revenue & Margin (Q1 vs Q2 FY26)</h3>
+                        <p class="text-sm text-slate-500 text-center mb-4">Shows the recent quarter-on-quarter performance evolution for the selected segment.</p>
+                        <div class="chart-container" style="height: 300px; max-height: 350px;">
+                            <canvas id="segmentTrendChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-xl font-semibold text-center mb-4">Q2 FY26 Segment Revenue (₹ Cr)</h3>
+                            <div class="chart-container" style="height: 250px; max-height: 280px;">
+                                <canvas id="segmentRevenueChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-xl font-semibold text-center mb-4">Q2 FY26 Segment EBITDA Margin (%)</h3>
+                            <div class="chart-container" style="height: 250px; max-height: 280px;">
+                                <canvas id="segmentMarginChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="content-health" class="content-section space-y-8">
+            <div class="p-6 bg-white rounded-lg shadow">
+                <h2 class="text-2xl font-bold text-slate-800 mb-3">Financial Health & Stability Dashboard</h2>
+                <p class="text-slate-600">
+                    This dashboard focuses on L&T's underlying financial health. It includes key Balance Sheet metrics, the significant turnaround in Cash Flow, and critical Financial Ratios. The new Capital Employed chart clearly illustrates the allocation of funds within the entire conglomerate structure.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="kpi-card text-center">
+                    <div class="kpi-title">Total Assets</div>
+                    <div class="kpi-value">₹3,91,103 Cr</div>
+                    <div class="kpi-delta-pos">↑ 3% vs Mar 2025</div>
+                </div>
+                <div class="kpi-card text-center">
+                    <div class="kpi-title">Net Worth</div>
+                    <div class="kpi-value">₹1,01,384 Cr</div>
+                    <div class="kpi-delta-pos">↑ 4% vs Mar 2025</div>
+                </div>
+                <div class="kpi-card text-center">
+                    <div class="kpi-title">Debt-Equity Ratio</div>
+                    <div class="kpi-value">1.09x</div>
+                    <div class="kpi-delta-pos">Improved from 1.12x</div>
+                </div>
+                <div class="kpi-card text-center">
+                    <div class="kpi-title">Current Ratio</div>
+                    <div class="kpi-value">1.25x</div>
+                    <div class="kpi-delta-pos">Improved from 1.21x</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-center mb-4">Capital Employed Structure (Mar 2025)</h3>
+                    <p class="text-sm text-slate-500 text-center mb-4">Breakdown of the funds utilized across key asset categories.</p>
+                    <div class="chart-container">
+                        <canvas id="capitalEmployedChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-center mb-4">Key Financial Ratios (Q2 FY25 vs Q2 FY26)</h3>
+                    <p class="text-sm text-slate-500 text-center mb-4">Profitability and debt coverage ratios show strong improvement, highlighting disciplined financial management.</p>
+                    <div class="chart-container">
+                        <canvas id="keyRatiosChart"></canvas>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-center mb-4">Cash Flow Analysis (H1 FY25 vs H1 FY26)</h3>
+                    <p class="text-sm text-slate-500 text-center mb-4">Note the significant turnaround in Operating Activities, driven by a better working capital cycle. All values in ₹ Cr.</p>
+                    <div class="chart-container" style="max-width: 800px;">
+                        <canvas id="cashFlowChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="content-strategy" class="content-section space-y-8">
+            <div class="p-6 bg-white rounded-lg shadow">
+                <h2 class="text-2xl font-bold text-slate-800 mb-3">Strategy, Outlook & Key Takeaways</h2>
+                <p class="text-slate-600">
+                    This final section outlines L&T's forward-looking strategy, the macroeconomic context, and management's guidance. It concludes with a summary of the key strengths and potential risks identified in the report, providing a balanced view of the company's position.
+                </p>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-semibold mb-4">Strategic Updates (Lakshya 2026)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-5 rounded-lg shadow space-y-2">
+                        <h4 class="font-bold text-blue-700">1. Divestment Move</h4>
+                        <p class="text-sm text-slate-600">In-principle agreement to divest stake in L&T Metro Rail (Hyderabad), aligning with goal to exit non-core concession assets.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg shadow space-y-2">
+                        <h4 class="font-bold text-blue-700">2. Tech & Digital Expansion</h4>
+                        <p class="text-sm text-slate-600">Investing in semiconductors, data centres, and clean energy. Targeting synergy between LTIMindtree and LTTS.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg shadow space-y-2">
+                        <h4 class="font-bold text-blue-700">3. Financial Services Pivot</h4>
+                        <p class="text-sm text-slate-600">L&T Finance is now ~98% retail-focussed (housing, farm, vehicle loans), using AI for credit evaluation to improve margins.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg shadow space-y-2">
+                        <h4 class="font-bold text-blue-700">4. Clean Energy Push</h4>
+                        <p class="text-sm text-slate-600">Expanding capacity in renewables, electrolyser manufacturing, and carbon capture projects.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-4">Management Guidance & Macro Outlook</h3>
+                    <div class="mb-6 p-4 bg-neutral-50 rounded-lg border border-slate-200">
+                        <blockquote class="text-lg italic text-slate-700 relative">
+                            “We continue to witness strong capex momentum across India and the Middle East, and remain optimistic about order prospects.”
+                        </blockquote>
+                        <cite class="block text-right font-semibold text-slate-800 mt-2">— S. N. Subrahmanyan, CMD, L&T</cite>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-slate-800 mb-2">FY26 Guidance</h4>
+                            <ul class="list-disc list-inside space-y-1 text-slate-600">
+                                <li>Revenue Growth: Low to mid-teens</li>
+                                <li>Margin Range: 9.8% – 10.3%</li>
+                                <li>Order Inflow: Expected to remain robust</li>
+                                <li>Focus: Cash conversion, digital growth</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-800 mb-2">Macroeconomic Outlook</h4>
+                            <ul class="list-disc list-inside space-y-1 text-slate-600">
+                                <li><b>India:</b> GDP projected at 6.5-7.0%</li>
+                                <li><b>Global:</b> Growth slowdown (~3%)</li>
+                                <li><b>Middle East:</b> Positive momentum, large EPC spending</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-4">Key Takeaways</h3>
+                    <div>
+                        <h4 class="font-semibold text-emerald-700 mb-2">✅ Strengths</h4>
+                        <ul class="list-disc list-inside space-y-1 text-slate-600 text-sm">
+                            <li>Record order inflow, diversified order book</li>
+                            <li>Strong overseas performance</li>
+                            <li>Positive cash flow turnaround</li>
+                            <li>Reduced debt-equity ratio & strong liquidity</li>
+                        </ul>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="font-semibold text-red-700 mb-2">⚠️ Risks</h4>
+                        <ul class="list-disc list-inside space-y-1 text-slate-600 text-sm">
+                            <li>Execution delays (weather, regulatory)</li>
+                            <li>Margin pressure in Energy & IT</li>
+                            <li>Global macro & geopolitical risks</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            let allChartInstances = [];
+            let segmentTrendChartInstance = null;
+
+            const chartOptions = (title, unit = '', isLine = false) => ({
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: false,
+                        text: title,
+                        font: { size: 16, family: 'Inter' }
+                    },
+                    legend: {
+                        position: 'bottom',
+                        labels: { font: { family: 'Inter' } }
+                    },
+                    tooltip: {
+                        enabled: true,
+                        mode: isLine ? 'nearest' : 'index',
+                        intersect: false,
+                        backgroundColor: '#334155',
+                        titleFont: { family: 'Inter', weight: 'bold' },
+                        bodyFont: { family: 'Inter' },
+                        padding: 10,
+                        cornerRadius: 4,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                let value = context.parsed.y !== null ? context.parsed.y : context.parsed.x;
+                                label += value.toLocaleString() + unit;
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { font: { family: 'Inter' } },
+                        grid: { color: '#e2e8f0' }
+                    },
+                    x: {
+                        ticks: { font: { family: 'Inter' } },
+                        grid: { display: false }
+                    }
+                }
+            });
+
+            // --- Data Definitions ---
+            const h1GrowthData = {
+                labels: ['Order Inflow', 'Revenue', 'Profit After Tax (PAT)'],
+                datasets: [{
+                    label: 'YoY Growth Rate',
+                    data: [39, 13, 22],
+                    backgroundColor: ['#059669', '#0284c7', '#10b981'],
+                    unit: '%'
+                }]
+            };
+
+            const orderBookData = {
+                labels: ['Middle East & GCC (45%)', 'India (41%)', 'Other International (14%)'],
+                datasets: [{
+                    label: 'Order Book Distribution',
+                    data: [45, 41, 14],
+                    backgroundColor: ['#1e40af', '#059669', '#94a3b8'],
+                    hoverOffset: 4,
+                    unit: '%'
+                }]
+            };
+
+            const geographicRevenueData = {
+                labels: ['Domestic Revenue (65%)', 'International Revenue (35%)'],
+                datasets: [{
+                    label: 'H1 Revenue Mix',
+                    data: [65, 35],
+                    backgroundColor: ['#0284c7', '#ef4444'],
+                    hoverOffset: 4,
+                    unit: '%'
+                }]
+            };
+
+            const segmentData = {
+                'Infrastructure Projects': {
+                    q2_rev: 31759, q2_margin: 6.3, q1_rev: 18500, q1_margin: 5.8,
+                    growth: -1, inflow: 52686, comments: "Slower water projects & extended monsoon hit execution. Building & Factories, Power T&D performed well."
+                },
+                'Energy Projects': {
+                    q2_rev: 13082, q2_margin: 7.3, q1_rev: 9000, q1_margin: 8.5,
+                    growth: 48, inflow: 38156, comments: "Driven by large international Hydrocarbon contracts (98% intl inflow). Margins dipped due to project closure adjustments."
+                },
+                'Hi-Tech Manufacturing': {
+                    q2_rev: 2754, q2_margin: 14.7, q1_rev: 2050, q1_margin: 14.2,
+                    growth: 33, inflow: 2582, comments: "Growth from Heavy & Precision Engineering; margins improved from better mix."
+                },
+                'IT & Technology Services': {
+                    q2_rev: 13274, q2_margin: 20.2, q1_rev: 12500, q1_margin: 20.5,
+                    growth: 13, inflow: null, comments: "Growth from digital transformation & cloud services; margin dip due to incubation of new tech units."
+                },
+                'Financial Services': {
+                    q2_rev: 4166, q2_margin: 10.2, q1_rev: 3800, q1_margin: 10.0,
+                    growth: 9, inflow: null, comments: "Retail loan book now 98% of total. Higher disbursements improved profit. Margin is NIM+Fees."
+                },
+                'Development Projects': {
+                    q2_rev: 1533, q2_margin: 2.1, q1_rev: 1400, q1_margin: 1.5,
+                    growth: 10, inflow: null, comments: "Nabha Power provision affected EBIT. Hyderabad Metro improved with fare revision. Margin calculated from EBIT."
+                },
+                'Others': {
+                    q2_rev: 1416, q2_margin: 31.3, q1_rev: 1650, q1_margin: 30.5,
+                    growth: -14, inflow: null, comments: "Realty slowdown offset by high-margin commercial sale."
+                }
+            };
+            
+            const segmentRevenueData = {
+                labels: ['Infra', 'Energy', 'IT & Tech', 'Financial', 'Hi-Tech', 'Dev.', 'Others'],
+                datasets: [{
+                    label: 'Q2 FY26 Revenue',
+                    data: [31759, 13082, 13274, 4166, 2754, 1533, 1416],
+                    backgroundColor: '#0284c7',
+                    unit: ' Cr'
+                }]
+            };
+
+            const segmentMarginData = {
+                labels: ['IT & Tech', 'Others', 'Hi-Tech', 'Financial', 'Energy', 'Infra'],
+                datasets: [{
+                    label: 'Q2 FY26 EBITDA Margin',
+                    data: [20.2, 31.3, 14.7, 10.2, 7.3, 6.3],
+                    backgroundColor: '#059669',
+                    unit: '%'
+                }]
+            };
+
+            const cashFlowData = {
+                labels: ['Operating Activities', 'Investing Activities', 'Financing Activities'],
+                datasets: [
+                    {
+                        label: 'H1 FY25',
+                        data: [246, -4686, 2656],
+                        backgroundColor: '#64748b',
+                        unit: ' Cr'
+                    },
+                    {
+                        label: 'H1 FY26',
+                        data: [3816, 1056, -7485],
+                        backgroundColor: '#0284c7',
+                        unit: ' Cr'
+                    }
+                ]
+            };
+
+            const keyRatiosData = {
+                labels: ['Interest Coverage Ratio', 'Debt Service Coverage', 'Return on Equity (ROE)'],
+                datasets: [
+                    {
+                        label: 'Q2 FY25',
+                        data: [6.11, 2.86, 13.5],
+                        backgroundColor: '#64748b',
+                        unit: 'x'
+                    },
+                    {
+                        label: 'Q2 FY26',
+                        data: [7.96, 6.00, 14.8],
+                        backgroundColor: '#059669',
+                        unit: 'x'
+                    }
+                ]
+            };
+
+            const capitalEmployedData = {
+                labels: ['Assets'],
+                datasets: [
+                    {
+                        label: 'Net Working Capital',
+                        data: [25],
+                        backgroundColor: '#3b82f6',
+                        stack: 'stack1',
+                        unit: '%'
+                    },
+                    {
+                        label: 'Fixed/Long-Term Assets',
+                        data: [35],
+                        backgroundColor: '#10b981',
+                        stack: 'stack1',
+                        unit: '%'
+                    },
+                    {
+                        label: 'Investments & Goodwill',
+                        data: [40],
+                        backgroundColor: '#f59e0b',
+                        stack: 'stack1',
+                        unit: '%'
+                    }
+                ]
+            };
+
+            // --- Chart Rendering Logic ---
+            function createChart(ctx, type, data, options) {
+                if (ctx) {
+                    const chart = new Chart(ctx, { type, data, options });
+                    allChartInstances.push(chart);
+                    return chart;
+                }
+                return null;
+            }
+
+            function destroyAllCharts() {
+                allChartInstances.forEach(chart => chart.destroy());
+                allChartInstances.length = 0;
+            }
+            
+            function renderOverviewCharts() {
+                createChart(
+                    document.getElementById('h1PerformanceGrowthChart')?.getContext('2d'),
+                    'bar',
+                    h1GrowthData,
+                    chartOptions('YoY Growth Rate', '%')
+                );
+                
+                createChart(
+                    document.getElementById('orderBookChart')?.getContext('2d'),
+                    'doughnut',
+                    orderBookData,
+                    chartOptions('Order Book Geographic Distribution', '%')
+                );
+
+                createChart(
+                    document.getElementById('geographicRevenueChart')?.getContext('2d'),
+                    'doughnut',
+                    geographicRevenueData,
+                    chartOptions('H1 Revenue Mix', '%')
+                );
+            }
+            
+            function renderSegmentCharts() {
+                createChart(
+                    document.getElementById('segmentRevenueChart')?.getContext('2d'),
+                    'bar',
+                    segmentRevenueData,
+                    chartOptions('Q2 FY26 Segment Revenue (₹ Cr)', ' Cr')
+                );
+                
+                createChart(
+                    document.getElementById('segmentMarginChart')?.getContext('2d'),
+                    'bar',
+                    segmentMarginData,
+                    chartOptions('Q2 FY26 Segment EBITDA Margin (%)', '%')
+                );
+            }
+
+            function renderHealthCharts() {
+                createChart(
+                    document.getElementById('cashFlowChart')?.getContext('2d'),
+                    'bar',
+                    cashFlowData,
+                    chartOptions('Cash Flow Analysis (in ₹ Cr)', ' Cr')
+                );
+                
+                createChart(
+                    document.getElementById('keyRatiosChart')?.getContext('2d'),
+                    'bar',
+                    keyRatiosData,
+                    chartOptions('Key Financial Ratios')
+                );
+
+                createChart(
+                    document.getElementById('capitalEmployedChart')?.getContext('2d'),
+                    'bar',
+                    capitalEmployedData,
+                    {
+                        ...chartOptions('Capital Employed Structure', '%'),
+                        scales: {
+                            x: { stacked: true, ticks: { display: false } },
+                            y: { stacked: true, beginAtZero: true, max: 100, ticks: { stepSize: 20, callback: function(value) { return value + '%'; } } }
+                        }
+                    }
+                );
+            }
+
+            // --- Segment Deep Dive Dynamic Logic ---
+            function updateSegmentTrendChart(segmentName) {
+                const data = segmentData[segmentName];
+                const trendData = {
+                    labels: ['Q1 FY26', 'Q2 FY26'],
+                    datasets: [
+                        {
+                            label: 'Revenue (Cr)',
+                            data: [data.q1_rev, data.q2_rev],
+                            borderColor: '#0284c7',
+                            backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                            fill: true,
+                            yAxisID: 'yRev',
+                            tension: 0.3,
+                            pointStyle: 'rectRounded'
+                        },
+                        {
+                            label: 'Margin (%)',
+                            data: [data.q1_margin, data.q2_margin],
+                            borderColor: '#059669',
+                            backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                            fill: false,
+                            yAxisID: 'yMargin',
+                            tension: 0.3,
+                            pointStyle: 'triangle'
+                        }
+                    ]
+                };
+
+                const ctx = document.getElementById('segmentTrendChart')?.getContext('2d');
+
+                if (segmentTrendChartInstance) {
+                    segmentTrendChartInstance.destroy();
+                }
+
+                if (ctx) {
+                    segmentTrendChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: trendData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: chartOptions('', '', true).plugins.tooltip
+                            },
+                            interaction: { mode: 'index', intersect: false },
+                            scales: {
+                                yRev: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    title: { display: true, text: 'Revenue (₹ Cr)' },
+                                    ticks: { callback: (v) => v.toLocaleString() + ' Cr' }
+                                },
+                                yMargin: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    title: { display: true, text: 'Margin (%)' },
+                                    grid: { drawOnChartArea: false },
+                                    ticks: { callback: (v) => v + '%' }
+                                }
+                            }
+                        }
+                    });
+                    allChartInstances.push(segmentTrendChartInstance);
+                }
+            }
+            
+            function formatGrowth(growth) {
+                if (growth === null || isNaN(growth)) return `<span class="kpi-delta-neutral">N/A</span>`;
+                if (growth > 0) return `<span class="kpi-delta-pos">↑ ${growth}%</span>`;
+                if (growth < 0) return `<span class="kpi-delta-neg">↓ ${Math.abs(growth)}%</span>`;
+                return `<span class="kpi-delta-neutral">${growth}%</span>`;
+            }
+
+            function updateSegmentDetails(segmentName) {
+                const data = segmentData[segmentName];
+                const segmentDetailsCard = document.getElementById('segment-details-card');
+                if (!data || !segmentDetailsCard) return;
+
+                segmentDetailsCard.innerHTML = `
+                    <h4 class="text-lg font-bold text-blue-700 mb-3">${segmentName} Focus</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="kpi-title">Q2 Revenue</div>
+                            <div class="flex items-baseline">
+                                <span class="text-2xl font-semibold text-slate-700">₹${data.q2_rev.toLocaleString('en-IN')} Cr</span>
+                                <span class="ml-2">YoY: ${formatGrowth(data.growth)}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="kpi-title">Q2 Order Inflow</div>
+                            <span class="text-2xl font-semibold text-slate-700">${data.inflow ? '₹' + data.inflow.toLocaleString('en-IN') + ' Cr' : 'N/A'}</span>
+                        </div>
+                        <div>
+                            <div class="kpi-title">Q2 EBITDA Margin</div>
+                            <span class="text-2xl font-semibold text-slate-700">${data.q2_margin ? data.q2_margin + '%' : 'N/A'} ${segmentName === 'Financial Services' ? '(NIM+Fees)' : ''}</span>
+                        </div>
+                        <div class="pt-2 border-t border-slate-200">
+                            <h5 class="kpi-title font-semibold">Key Commentary</h5>
+                            <p class="text-sm text-slate-600">${data.comments}</p>
+                        </div>
+                    </div>
+                `;
+                updateSegmentTrendChart(segmentName);
+            }
+            
+            // --- Navigation Logic ---
+            const navButtons = document.querySelectorAll('.nav-item');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            function handleNavClick(e) {
+                const targetButton = e.target.closest('.nav-item');
+                if (!targetButton) return;
+
+                const contentId = targetButton.dataset.content;
+                
+                navButtons.forEach(btn => {
+                    btn.classList.remove('nav-item-active');
+                    if (btn.dataset.content === contentId) {
+                        btn.classList.add('nav-item-active');
+                    }
+                });
+                
+                destroyAllCharts();
+                if (segmentTrendChartInstance) {
+                    segmentTrendChartInstance.destroy();
+                    segmentTrendChartInstance = null;
+                }
+                
+                contentSections.forEach(section => {
+                    if (section.id === contentId) {
+                        section.classList.add('content-section-active');
+                    } else {
+                        section.classList.remove('content-section-active');
+                    }
+                });
+
+                if (contentId === 'content-overview') {
+                    renderOverviewCharts();
+                } else if (contentId === 'content-segments') {
+                    renderSegmentCharts();
+                    const selectedSegment = document.getElementById('segment-selector').value;
+                    updateSegmentDetails(selectedSegment);
+                } else if (contentId === 'content-health') {
+                    renderHealthCharts();
+                }
+            }
+
+            document.querySelector('nav').addEventListener('click', handleNavClick);
+
+            const segmentSelector = document.getElementById('segment-selector');
+            if (segmentSelector) {
+                segmentSelector.addEventListener('change', (e) => {
+                    updateSegmentDetails(e.target.value);
+                });
+            }
+
+            // Initial rendering
+            renderOverviewCharts();
+            updateSegmentDetails('Infrastructure Projects'); // Pre-load details for the default segment
+
+        });
+    </script>
+</body>
+</html>
